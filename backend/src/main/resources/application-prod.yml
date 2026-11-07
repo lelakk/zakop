@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/zakop}
+    username: ${SPRING_DATASOURCE_USERNAME:zakop_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:zakop_secret}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+logging:
+  level:
+    pl.zakop: INFO
