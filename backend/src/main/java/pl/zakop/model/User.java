@@ -1,6 +1,7 @@
 package pl.zakop.model;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +17,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.NONE)
     private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
@@ -28,12 +30,12 @@ public class User {
     private String passwordHash;
 
     @Column(nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
     private Instant createdAt = Instant.now();
 
     public User(String username, String email, String passwordHash) {
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
-        this.createdAt = Instant.now();
     }
 }

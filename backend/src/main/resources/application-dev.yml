@@ -17,6 +17,10 @@ spring:
       hibernate:
         format_sql: true
 
+cors:
+  allowed-origin-patterns: http://localhost:[*]
+  allowed-headers: "*"
+
 logging:
   level:
     pl.zakop: DEBUG

@@ -1,6 +1,7 @@
 package pl.zakop.model;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +17,7 @@ public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.NONE)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,12 +32,12 @@ public class Comment {
     private String content;
 
     @Column(nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
     private Instant createdAt = Instant.now();
 
     public Comment(Post post, User author, String content) {
         this.post = post;
         this.author = author;
         this.content = content;
-        this.createdAt = Instant.now();
     }
 }

@@ -1,6 +1,7 @@
 package pl.zakop.model;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,6 +22,7 @@ public class Vote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.NONE)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,12 +38,12 @@ public class Vote {
     private VoteType type;
 
     @Column(nullable = false, updatable = false)
+    @Setter(AccessLevel.NONE)
     private Instant createdAt = Instant.now();
 
     public Vote(Post post, User user, VoteType type) {
         this.post = post;
         this.user = user;
         this.type = type;
-        this.createdAt = Instant.now();
     }
 }

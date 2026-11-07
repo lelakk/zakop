@@ -10,6 +10,10 @@ spring:
       ddl-auto: update
     show-sql: false
 
+cors:
+  allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:https://zakop.pl}
+  allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+
 logging:
   level:
     pl.zakop: INFO
