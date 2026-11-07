@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
   token: string | null;
@@ -8,11 +8,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(localStorage.getItem("zakop_token"));
-  const [userEmail, setUserEmail] = useState<string | null>(localStorage.getItem("zakop_user"));
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("zakop_token"));
+  const [userEmail, setUserEmail] = useState<string | null>(() => localStorage.getItem("zakop_user"));
 
   const login = (newToken: string, email: string) => {
     localStorage.setItem("zakop_token", newToken);
@@ -28,6 +28,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUserEmail(null);
   };
 
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setToken(null);
+      setUserEmail(null);
+    };
+
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("auth:unauthorized", handleUnauthorized);
+  }, []);
+
   return (
     <AuthContext.Provider value={{ token, userEmail, login, logout, isAuthenticated: !!token }}>
       {children}
@@ -35,4 +45,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};

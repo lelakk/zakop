@@ -65,6 +65,18 @@ paths:
             type: string
             enum: [HOT, NEW]
             default: HOT
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
           content:

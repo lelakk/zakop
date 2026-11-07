@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
@@ -19,41 +19,80 @@ export const VoteControls: React.FC<VoteControlsProps> = ({
   onRequireLogin,
 }) => {
   const { isAuthenticated } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const calculateOptimisticState = (targetType: "UPVOTE" | "DOWNVOTE") => {
+    if (userVote === targetType) {
+      const delta = targetType === "UPVOTE" ? -1 : 1;
+      return { score: voteScore + delta, vote: "NONE" as const };
+    }
+    const delta = userVote === "NONE" ? (targetType === "UPVOTE" ? 1 : -1) : (targetType === "UPVOTE" ? 2 : -2);
+    return { score: voteScore + delta, vote: targetType };
+  };
 
   const handleVote = async (targetType: "UPVOTE" | "DOWNVOTE") => {
-    if (!isAuthenticated) return onRequireLogin();
+    if (!isAuthenticated) {
+      onRequireLogin();
+      return;
+    }
+    if (isSubmitting) return;
 
-    if (userVote === targetType) {
-      // Cofnięcie głosu
-      const diff = targetType === "UPVOTE" ? -1 : 1;
-      onVoteChange(voteScore + diff, "NONE");
-      await api.DELETE("/posts/{postId}/votes", { params: { path: { postId } } });
-    } else {
-      // Nowy głos lub zmiana
-      const diff = userVote === "NONE" ? (targetType === "UPVOTE" ? 1 : -1) : (targetType === "UPVOTE" ? 2 : -2);
-      onVoteChange(voteScore + diff, targetType);
-      await api.PUT("/posts/{postId}/votes", {
-        params: { path: { postId } },
-        body: { voteType: targetType },
-      });
+    const previousScore = voteScore;
+    const previousVote = userVote;
+    const { score: optimisticScore, vote: optimisticVote } = calculateOptimisticState(targetType);
+
+    onVoteChange(optimisticScore, optimisticVote);
+    setIsSubmitting(true);
+
+    try {
+      const response = optimisticVote === "NONE"
+        ? await api.DELETE("/posts/{postId}/votes", { params: { path: { postId } } })
+        : await api.PUT("/posts/{postId}/votes", {
+            params: { path: { postId } },
+            body: { voteType: targetType },
+          });
+
+      if (response.error || !response.data) {
+        throw new Error("Vote request failed");
+      }
+
+      onVoteChange(response.data.newVoteScore, response.data.currentVote);
+    } catch {
+      onVoteChange(previousScore, previousVote);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900 border border-slate-800 w-14 shrink-0">
       <button
+        type="button"
+        disabled={isSubmitting}
         onClick={(e) => { e.stopPropagation(); handleVote("UPVOTE"); }}
-        className={`p-1 rounded hover:bg-slate-800 ${userVote === "UPVOTE" ? "text-orange-500 bg-orange-950/40" : "text-slate-400"}`}
+        className={`p-1 rounded hover:bg-slate-800 disabled:opacity-50 transition ${
+          userVote === "UPVOTE" ? "text-orange-500 bg-orange-950/40" : "text-slate-400"
+        }`}
         title="Wykop (+1)"
       >
         <ChevronUp className="w-6 h-6 stroke-[3]" />
       </button>
-      <span className={`text-sm font-bold my-0.5 ${voteScore > 0 ? "text-orange-500" : voteScore < 0 ? "text-blue-500" : "text-slate-400"}`}>
+
+      <span
+        className={`text-sm font-bold my-0.5 ${
+          voteScore > 0 ? "text-orange-500" : voteScore < 0 ? "text-blue-500" : "text-slate-400"
+        }`}
+      >
         {voteScore}
       </span>
+
       <button
+        type="button"
+        disabled={isSubmitting}
         onClick={(e) => { e.stopPropagation(); handleVote("DOWNVOTE"); }}
-        className={`p-1 rounded hover:bg-slate-800 ${userVote === "DOWNVOTE" ? "text-blue-500 bg-blue-950/40" : "text-slate-400"}`}
+        className={`p-1 rounded hover:bg-slate-800 disabled:opacity-50 transition ${
+          userVote === "DOWNVOTE" ? "text-blue-500 bg-blue-950/40" : "text-slate-400"
+        }`}
         title="Zakop (-1)"
       >
         <ChevronDown className="w-6 h-6 stroke-[3]" />
