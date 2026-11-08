@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: zakop-backend
+  profiles:
+    default: dev
+
+server:
+  port: 8080
+
+cors:
+  allowed-origin-patterns: http://localhost:[*]
+  allowed-headers: "*"
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
