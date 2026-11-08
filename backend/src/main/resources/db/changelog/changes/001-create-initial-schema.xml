@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="001-create-users-table" author="zakop">
+        <createTable tableName="users">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_users" nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_users_username"/>
+            </column>
+            <column name="email" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_users_email"/>
+            </column>
+            <column name="password_hash" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="002-create-posts-table" author="zakop">
+        <createTable tableName="posts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_posts" nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="CLOB"/>
+            <column name="url" type="VARCHAR(1024)"/>
+            <column name="author_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="score" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="posts"
+                baseColumnNames="author_id"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                constraintName="fk_posts_author"/>
+
+        <createIndex indexName="idx_posts_author_id" tableName="posts">
+            <column name="author_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_posts_created_at" tableName="posts">
+            <column name="created_at" descending="true"/>
+        </createIndex>
+
+        <createIndex indexName="idx_posts_score" tableName="posts">
+            <column name="score" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="003-create-comments-table" author="zakop">
+        <createTable tableName="comments">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_comments" nullable="false"/>
+            </column>
+            <column name="post_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="author_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="CLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="comments"
+                baseColumnNames="post_id"
+                referencedTableName="posts"
+                referencedColumnNames="id"
+                constraintName="fk_comments_post"
+                onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                baseTableName="comments"
+                baseColumnNames="author_id"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                constraintName="fk_comments_author"/>
+
+        <createIndex indexName="idx_comments_post_id_created_at" tableName="comments">
+            <column name="post_id"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <createIndex indexName="idx_comments_author_id" tableName="comments">
+            <column name="author_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="004-create-votes-table" author="zakop">
+        <createTable tableName="votes">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_votes" nullable="false"/>
+            </column>
+            <column name="post_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint
+                tableName="votes"
+                columnNames="post_id, user_id"
+                constraintName="uk_vote_post_user"/>
+
+        <addForeignKeyConstraint
+                baseTableName="votes"
+                baseColumnNames="post_id"
+                referencedTableName="posts"
+                referencedColumnNames="id"
+                constraintName="fk_votes_post"
+                onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                baseTableName="votes"
+                baseColumnNames="user_id"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                constraintName="fk_votes_user"/>
+
+        <createIndex indexName="idx_votes_user_id" tableName="votes">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
